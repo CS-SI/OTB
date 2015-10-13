@@ -8,7 +8,7 @@ otb_test_application(NAME apTvClComputeOGRLayersFeaturesStatistics
                      VALID   --compare-ascii ${NOTOL}
                              ${OTBAPP_BASELINE_FILES}/apTvClComputeOGRLayersFeaturesStatistics.xml
                              ${TEMP}/apTvClComputeOGRLayersFeaturesStatistics.xml)
-                             
+
 #----------- SOMClassification TESTS ----------------
 otb_test_application(NAME apTvClSOMClassificationSmall
                      APP  SOMClassification
@@ -342,7 +342,7 @@ otb_test_application(NAME apTvClTrainOGRLayersClassifier
                              ${OTBAPP_BASELINE_FILES}/apTvClModel.svm
                              ${TEMP}/apTvClModel.svm)
 
-set_tests_properties(apTvClTrainOGRLayersClassifier PROPERTIES DEPENDS apTvClComputeOGRLayersFeaturesStatistics) 
+set_tests_properties(apTvClTrainOGRLayersClassifier PROPERTIES DEPENDS apTvClComputeOGRLayersFeaturesStatistics)
 
 #----------- ComputeConfusionMatrix TESTS ----------------
 otb_test_application(NAME apTvComputeConfusionMatrixV
@@ -599,7 +599,7 @@ otb_test_application(NAME apTvCdbComputePolylineFeatureFromImage_LI_NOBUIL_gt
                              ${OTBAPP_BASELINE_FILES}/cdbTvComputePolylineFeatureFromImage_LI_NOBUIL_gt.shp
                              ${TEMP}/apTvCdbComputePolylineFeatureFromImage_LI_NOBUIL_gt.shp)
 
-set_tests_properties(apTvCdbComputePolylineFeatureFromImage_LI_NOBUIL_gt PROPERTIES DEPENDS apTvCdbComputePolylineFeatureFromImage_LI_ROADSA_gt) 
+set_tests_properties(apTvCdbComputePolylineFeatureFromImage_LI_NOBUIL_gt PROPERTIES DEPENDS apTvCdbComputePolylineFeatureFromImage_LI_ROADSA_gt)
 
 otb_test_application(NAME apTvCdbComputePolylineFeatureFromImage_LI_NOBUIL_RoadExtractionApplication
                      APP  ComputePolylineFeatureFromImage
@@ -612,7 +612,7 @@ otb_test_application(NAME apTvCdbComputePolylineFeatureFromImage_LI_NOBUIL_RoadE
                              ${OTBAPP_BASELINE_FILES}/cdbTvComputePolylineFeatureFromImage_LI_NOBUIL_RoadExtractionApplication.shp
                              ${TEMP}/apTvCdbComputePolylineFeatureFromImage_LI_NOBUIL_RoadExtractionApplication.shp)
 
-set_tests_properties(apTvCdbComputePolylineFeatureFromImage_LI_NOBUIL_RoadExtractionApplication PROPERTIES DEPENDS apTvCdbComputePolylineFeatureFromImage_LI_ROADSA_RoadExtractionApplication) 
+set_tests_properties(apTvCdbComputePolylineFeatureFromImage_LI_NOBUIL_RoadExtractionApplication PROPERTIES DEPENDS apTvCdbComputePolylineFeatureFromImage_LI_ROADSA_RoadExtractionApplication)
 endif()
 
 #----------- KMeansClassification TESTS ----------------
@@ -650,7 +650,7 @@ otb_test_application(NAME apTvClTrainSVMImagesClassifierQB1_allOpt_InXML
                               ${OTBAPP_BASELINE_FILES}/clsvmModelQB1.svm
                               ${TEMP}/clsvmModelQB1_allOpt_InXML.svm)
 
-set_tests_properties(apTvClTrainSVMImagesClassifierQB1_allOpt_InXML PROPERTIES DEPENDS apTvClComputeImagesStatisticsQB1) 
+set_tests_properties(apTvClTrainSVMImagesClassifierQB1_allOpt_InXML PROPERTIES DEPENDS apTvClComputeImagesStatisticsQB1)
 
 otb_test_application(NAME apTvClTrainSVMImagesClassifierQB1_OutXML
                       APP  TrainImagesClassifier
@@ -666,7 +666,7 @@ otb_test_application(NAME apTvClTrainSVMImagesClassifierQB1_OutXML
                               ${OTBAPP_BASELINE_FILES}/clsvmModelQB1.svm
                               ${TEMP}/clsvmModelQB1_OutXML.svm)
 
-set_tests_properties(apTvClTrainSVMImagesClassifierQB1_OutXML PROPERTIES DEPENDS apTvClComputeImagesStatisticsQB1) 
+set_tests_properties(apTvClTrainSVMImagesClassifierQB1_OutXML PROPERTIES DEPENDS apTvClComputeImagesStatisticsQB1)
 
   otb_test_application(NAME apTvClTrainSVMImagesClassifierQB123
                        APP  TrainImagesClassifier
@@ -685,7 +685,7 @@ set_tests_properties(apTvClTrainSVMImagesClassifierQB1_OutXML PROPERTIES DEPENDS
                                ${OTBAPP_BASELINE_FILES}/clsvmModelQB123.svm
                                ${TEMP}/clsvmModelQB123.svm)
 
-set_tests_properties(apTvClTrainSVMImagesClassifierQB123 PROPERTIES DEPENDS apTvClComputeImagesStatisticsQB123) 
+set_tests_properties(apTvClTrainSVMImagesClassifierQB123 PROPERTIES DEPENDS apTvClComputeImagesStatisticsQB123)
 
 otb_test_application(NAME apTvClTrainSVMImagesClassifierQB1
                       APP  TrainImagesClassifier
@@ -700,7 +700,7 @@ otb_test_application(NAME apTvClTrainSVMImagesClassifierQB1
                               ${OTBAPP_BASELINE_FILES}/clsvmModelQB1.svm
                               ${TEMP}/clsvmModelQB1.svm)
 
-set_tests_properties(apTvClTrainSVMImagesClassifierQB1 PROPERTIES DEPENDS apTvClComputeImagesStatisticsQB1) 
+set_tests_properties(apTvClTrainSVMImagesClassifierQB1 PROPERTIES DEPENDS apTvClComputeImagesStatisticsQB1)
 
   otb_test_application(NAME apTvClTrainSVMImagesClassifierQB456
                        APP  TrainImagesClassifier
@@ -769,7 +769,8 @@ otb_test_application(NAME apTvClassificationMapRegularization
                      APP  ClassificationMapRegularization
                      OPTIONS -io.in  ${OTBAPP_BASELINE}/clLabeledImageQB123_1.tif
                              -io.out ${TEMP}/clLabeledImageQB123_1_CMR_r2_nodl_10_undl_7.tif
-                             -ip.radius 2
+                             -ip.method "radius"
+                             -ip.method.radius.value 2
                              -ip.suvbool true
                              -ip.nodatalabel 10
                              -ip.undecidedlabel 7
@@ -777,6 +778,18 @@ otb_test_application(NAME apTvClassificationMapRegularization
                              ${OTBAPP_BASELINE}/clLabeledImageQB123_1_CMR_r2_nodl_10_undl_7.tif
                              ${TEMP}/clLabeledImageQB123_1_CMR_r2_nodl_10_undl_7.tif)
 
+otb_test_application(NAME apTvClassificationMapRegWithSegImage
+                     APP  ClassificationMapRegularization
+                     OPTIONS -io.in  ${INPUTDATA}/Classification/QB_1_ortho.tif
+                             -io.out ${TEMP}/apTvClassificationMapRegWithSegImage.tif
+                             -ip.method "image"
+                             -ip.method.image.value ${OTBAPP_BASELINE}/apTvClassificationMapRegSegmentationImage.tif
+                             -ip.suvbool true
+                             -ip.nodatalabel 3
+                             -ip.undecidedlabel 9
+                     VALID   --compare-image ${NOTOL}
+                             ${OTBAPP_BASELINE}/apTvClassificationMapRegWithSegImage.tif
+                             ${TEMP}/apTvClassificationMapRegWithSegImage.tif)
 
 #----------- OGRLayerClassifier TESTS ----------------
 
@@ -873,4 +886,3 @@ otb_test_application(NAME apTvClPredictRegressionTest_monovar
                              ${TEMP}/apTvClPredictRegressionTest_monovar.tif)
 
 endif()
-
