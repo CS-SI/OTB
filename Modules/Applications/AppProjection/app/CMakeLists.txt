@@ -54,6 +54,13 @@ otb_create_application(
   LINK_LIBRARIES ${${otb-module}_LIBRARIES})
 
 otb_create_application(
+  NAME           EstimateGlobalTransform
+  SOURCES        otbEstimateGlobalTransform.cxx
+  LINK_LIBRARIES ${${otb-module}_LIBRARIES}
+  ${OTBDisparityMap_LIBRARIES}
+  ${OTBIOXML_LIBRARIES})
+
+otb_create_application(
   NAME           ImageEnvelope
   SOURCES        otbImageEnvelope.cxx
   LINK_LIBRARIES ${${otb-module}_LIBRARIES})

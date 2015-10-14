@@ -10,6 +10,8 @@ otb_module(OTBAppProjection
     OTBOSSIMAdapters
     OTBCarto
     OTBApplicationEngine
+    OTBDisparityMap
+    OTBIOXML
     OTBMathParser
     OTBCommon
     OTBInterpolation
