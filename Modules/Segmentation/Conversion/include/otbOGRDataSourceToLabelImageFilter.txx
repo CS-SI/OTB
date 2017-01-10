@@ -15,11 +15,15 @@
      PURPOSE.  See the above copyright notices for more information.
 
 =========================================================================*/
+#ifndef otbOGRDataSourceToLabelImageFilter_txx
+#define otbOGRDataSourceToLabelImageFilter_txx
 
 #include "otbOGRDataSourceToLabelImageFilter.h"
 #include "otbOGRIOHelper.h"
 #include "otbGdalDataTypeBridge.h"
 #include "otbImageMetadataInterfaceFactory.h"
+#include "itkMetaDataObject.h"
+#include "otbMetaDataKey.h"
 
 #include "gdal_alg.h"
 #include "stdint.h" //needed for uintptr_t
@@ -164,6 +168,15 @@ OGRDataSourceToLabelImageFilter<TOutputImage>
          m_SrcDataSetLayers.push_back( &(ogrDS->GetLayer(layer).ogr()) );
       }
     }
+
+  // Set the NoData value using the background
+  const unsigned int & nbBands =  outputPtr->GetNumberOfComponentsPerPixel();
+  std::vector<bool> noDataValueAvailable;
+  noDataValueAvailable.resize(nbBands,true);
+  std::vector<double> noDataValue;
+  noDataValue.resize(nbBands,static_cast<double>(m_BackgroundValue));
+  itk::EncapsulateMetaData<std::vector<bool> >(dict,MetaDataKey::NoDataValueAvailable,noDataValueAvailable);
+  itk::EncapsulateMetaData<std::vector<double> >(dict,MetaDataKey::NoDataValue,noDataValue);
 }
 
 template< class TOutputImage>
@@ -224,11 +237,11 @@ OGRDataSourceToLabelImageFilter<TOutputImage>::GenerateData()
   GDALSetGeoTransform(dataset,const_cast<double*>(geoTransform.GetDataPointer()));
 
   // Burn the geometries into the dataset
-   if (dataset != NULL)
+   if (dataset != ITK_NULLPTR)
      {
      std::vector<std::string> options;
 
-     std::vector<double> foreground(nbBands,m_ForegroundValue);
+     std::vector<double> foreground(nbBands*m_SrcDataSetLayers.size(),m_ForegroundValue);
 
      if(m_BurnAttributeMode)
        {
@@ -239,9 +252,9 @@ OGRDataSourceToLabelImageFilter<TOutputImage>::GenerateData()
                           &m_BandsToBurn[0],
                           m_SrcDataSetLayers.size(),
                           &(m_SrcDataSetLayers[0]),
-                          NULL, NULL, &foreground[0],
+                          ITK_NULLPTR, ITK_NULLPTR, &foreground[0],
                           ogr::StringListConverter(options).to_ogr(),
-                          NULL, NULL );
+                          ITK_NULLPTR, ITK_NULLPTR );
      // release the dataset
      GDALClose( dataset );
      }
@@ -256,3 +269,5 @@ OGRDataSourceToLabelImageFilter<TOutputImage>
 }
 
 } // end namespace otb
+
+#endif
