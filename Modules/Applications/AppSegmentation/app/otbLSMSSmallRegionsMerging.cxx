@@ -70,7 +70,7 @@ public:
 private:
   ChangeLabelImageFilterType::Pointer m_ChangeLabelFilter;
 
-  void DoInit()
+  void DoInit() ITK_OVERRIDE
   {
     SetName("LSMSSmallRegionsMerging");
     SetDescription("Third (optional) step of the exact Large-Scale Mean-Shift segmentation workflow.");
@@ -90,6 +90,7 @@ private:
 
     AddParameter(ParameterType_OutputImage, "out", "Output Image");
     SetParameterDescription( "out", "The output image. The output image is the input image where the minimal regions have been merged." );
+    SetDefaultOutputPixelType("out",ImagePixelType_uint32);
 
     AddParameter(ParameterType_Int, "minsize", "Minimum Region Size");
     SetParameterDescription("minsize", "Minimum Region Size. If, after the segmentation, a region is of size lower than this criterion, the region is merged with the \"nearest\" region (radiometrically).");
@@ -107,6 +108,8 @@ private:
     SetDefaultParameterInt("tilesizey", 500);
     SetMinimumParameterIntValue("tilesizey", 1);
 
+    AddRAMParameter();
+
     // Doc example parameter settings
     SetDocExampleParameterValue("in","smooth.tif");
     SetDocExampleParameterValue("inseg","segmentation.tif");
@@ -117,11 +120,11 @@ private:
 
   }
 
-  void DoUpdateParameters()
+  void DoUpdateParameters() ITK_OVERRIDE
   {
   }
 
-  void DoExecute()
+  void DoExecute() ITK_OVERRIDE
   {
     clock_t tic = clock();
 
@@ -141,6 +144,8 @@ private:
 
     StatisticsImageFilterType::Pointer stats = StatisticsImageFilterType::New();
     stats->SetInput(labelIn);
+    stats->GetStreamer()->SetAutomaticAdaptativeStreaming(GetParameterInt("ram"));
+    AddProcess(stats->GetStreamer(), "Retrieve region count...");
     stats->Update();
     unsigned int regionCount=stats->GetMaximum();
 
@@ -324,8 +329,8 @@ private:
               if(nbPixels[curLabel]==size)
                 {
                 edgeLabel.insert(curLabel);
-                for(std::set<int>::iterator itAdjLabel=adjMap[curLabel].begin();
-                    itAdjLabel!=adjMap[curLabel].end(); ++itAdjLabel)
+                for(std::set<int>::iterator itAdjLabel=(adjMap[curLabel]).begin();
+                    itAdjLabel!=(adjMap[curLabel]).end(); ++itAdjLabel)
                   {
                   double tmpError = 0;
                   LabelImagePixelType tmpLabel = *itAdjLabel;

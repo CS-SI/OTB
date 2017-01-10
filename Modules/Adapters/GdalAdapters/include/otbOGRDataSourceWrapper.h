@@ -16,24 +16,34 @@
 
 =========================================================================*/
 
-#ifndef __otbOGRDataSourceWrapper_h
-#define __otbOGRDataSourceWrapper_h
+#ifndef otbOGRDataSourceWrapper_h
+#define otbOGRDataSourceWrapper_h
 
 #include <string>
 
 // to implement copy_const
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
 #include <boost/mpl/if.hpp>
 #include <boost/type_traits/add_const.hpp>
 #include <boost/type_traits/is_const.hpp>
 #include <boost/noncopyable.hpp>
+#pragma GCC diagnostic pop
+#else
+#include <boost/mpl/if.hpp>
+#include <boost/type_traits/add_const.hpp>
+#include <boost/type_traits/is_const.hpp>
+#include <boost/noncopyable.hpp>
+#endif
 
 #include "itkDataObject.h"
 #include "itkMacro.h" // itkNewMacro
 #include "itkObjectFactory.h" // that should have been included by itkMacro.h
 
 #include "otbOGRLayerWrapper.h"
+#include "otbOGRVersionProxy.h"
 
-class OGRDataSource;
 class OGRLayer;
 class OGRSpatialReference;
 class OGRGeometry;
@@ -44,9 +54,9 @@ namespace otb { namespace ogr {
  * \class DataSource
  * \brief Collection of geometric objects.
  *
- * This class is meant to supercede \c otb::VectorData class.  It provides
+ * This class is meant to supersede \c otb::VectorData class.  It provides
  * an encapsulation of OGR classes. In that particular case, it's an
- * encapsulation of \c OGRDataSource.
+ * encapsulation of \c GDALDataset.
  *
  * \note Not meant to be inherited.
  * \note This class has an entity semantics: \em non-copyable, nor \em
@@ -62,7 +72,9 @@ namespace otb { namespace ogr {
  *
  * \ingroup OTBGdalAdapters
  */
-class DataSource : public itk::DataObject , public boost::noncopyable
+ #include "OTBGdalAdaptersExport.h"
+ 
+class OTBGdalAdapters_EXPORT DataSource : public itk::DataObject , public boost::noncopyable
   {
 public:
   /**\name Standard ITK typedefs */
@@ -77,10 +89,10 @@ public:
   //@{
   /** Default builder.
    * This builder function creates a new \c DataSource with its default
-   * constructor. The actual \c OGRDataSource is using the <em>in-memory</em>
+   * constructor. The actual \c GDALDataset is using the <em>in-memory</em>
    * \c OGRSFDriver: \c OGRMemDriver.
    *
-   * \throw itk::ExceptionObject if the inner \c OGRDataSource cannot be
+   * \throw itk::ExceptionObject if the inner \c GDALDataset cannot be
    * opened.
    *
    * \note \c OGRRegisterAll() is implicitly called on construction.
@@ -130,24 +142,24 @@ public:
    * \param[in] datasourcename OGR identifier of the data source
    * \param[in] mode     opening mode (read or read-write)
    * \return a newly created \c DataSource.
-   * \throw itk::ExceptionObject if the inner \c OGRDataSource cannot be
+   * \throw itk::ExceptionObject if the inner \c GDALDataset cannot be
    * opened.
    * \note \c OGRRegisterAll() is implicitly called on construction
-   * \see \c DataSource(OGRDataSource *)
+   * \see \c DataSource(GDALDataset *)
    */
   static Pointer New(std::string const& datasourcename, Modes::type mode = Modes::Read);
   /**
-   * Builder from a built \c OGRDataSource.
-   * \param[in,out] source  \c OGRDataSource already constructed.
+   * Builder from a built \c GDALDataset.
+   * \param[in,out] source  \c GDALDataset already constructed.
    * \return a newly created \c DataSource that assumes ownership of \c
    * source.
    * \throw Nothing
    * \note \c OGRRegisterAll() is supposed to have been called before building
    * \c source.
    * \note No condition is assumed on the non-nullity of \c source.
-   * \see \c DataSource(OGRDataSource *)
+   * \see \c DataSource(GDALDataset *)
    */
-  static Pointer New(OGRDataSource * sourcemode, Modes::type mode = Modes::Read);
+  static Pointer New(ogr::version_proxy::GDALDatasetType * sourcemode, Modes::type mode = Modes::Read);
   //@}
 
   /**\name Projection Reference property */
@@ -159,7 +171,7 @@ public:
   //@}
 
   /** Clears the data source.
-   * \post The \c OGRDataSource owned is destroyed with the dedicated function
+   * \post The \c GDALDataset owned is destroyed with the dedicated function
    * from OGR %API.
    * \post <tt>m_DataSource = 0</tt>
    */
@@ -266,7 +278,7 @@ public:
    *  \return the extent of all layers
    *  \throw itk::ExceptionObject if the layers extents can not be retrieved.
    */
-  OGREnvelope GetGlobalExtent(bool force = false, std::string * outwkt=0) const;
+  OGREnvelope GetGlobalExtent(bool force = false, std::string * outwkt=ITK_NULLPTR) const;
 
   /** Grafts data and information from one data source to another.
    * \deprecated \c OGRLayer has an embedded input iterator. As a consequence,
@@ -274,17 +286,17 @@ public:
    *
    * This is a convenience function to setup a second data source with all the
    * meta information of another data source and use the same underlying \c
-   * OGRDataSource.
+   * GDALDataset.
    */
-  virtual void Graft(const itk::DataObject *data);
+  void Graft(const itk::DataObject *data) ITK_OVERRIDE;
 
   /**
    * Resets current data source with the one in parameter.
-   * \param[in,out] source source \c OGRDataSource that this instance will own.
+   * \param[in,out] source source \c GDALDataset that this instance will own.
    * \throw None
    * \post Assumes ownership of the \c source.
    */
-  void Reset(OGRDataSource * source);
+  void Reset(ogr::version_proxy::GDALDatasetType * source);
 
   /**\name Layers modification */
   //@{
@@ -309,11 +321,11 @@ public:
    * with \c CreateLayer(), you must use \c DeleteLayer().
    * \note The \c papszOptions parameter may later become a \c
    * std::vector<std::string>.
-   * \sa \c OGRDataSource::CreateLayer()
+   * \sa \c GDALDataset::CreateLayer()
    */
   Layer CreateLayer(
     std::string        const& name,
-    OGRSpatialReference     * poSpatialRef = NULL,
+    OGRSpatialReference     * poSpatialRef = ITK_NULLPTR,
     OGRwkbGeometryType        eGType = wkbUnknown,
     std::vector<std::string> const& papszOptions = std::vector<std::string>());
 
@@ -327,7 +339,7 @@ public:
    *
    * \pre The data source must support the delete operation.
    * \pre The index \c i must be in range [0, GetLayersCount()).
-   * \sa \c OGRDataSource::DeleteLayer()
+   * \sa \c GDALDataset::DeleteLayer()
    */
   void DeleteLayer(size_t i);
 
@@ -348,12 +360,12 @@ public:
    * with \c CreateLayer(), you must use \c DeleteLayer().
    * \note The \c papszOptions parameter may later become a \c
    * std::vector<std::string>.
-   * \sa \c OGRDataSource::CopyLayer()
+   * \sa \c GDALDataset::CopyLayer()
    */
   Layer CopyLayer(
     Layer            & srcLayer,
     std::string const& newName,
-    char            ** papszOptions = NULL);
+    char            ** papszOptions = ITK_NULLPTR);
   //@}
 
   /**\name Layers access
@@ -361,7 +373,7 @@ public:
    */
   //@{
   /** Returns the number of layers.
-   * \sa \c OGRDataSource::GetLayersCount()
+   * \sa \c GDALDataset::GetLayersCount()
    */
   int GetLayersCount() const;
 
@@ -422,13 +434,13 @@ public:
   Layer const GetLayerChecked(std::string const& name) const;
 
   /**
-   * Excecutes the statement..
+   * Executes the statement..
    * \param[in] statement  textual description of the SQL statement.
    * \param[in] poSpatialFilter  \c Geometry representing a spatial filter -- may be null.
    * \param[in] pszDialect  allows control of the statement dialect. If set to
    *                     NULL, the OGR SQL engine will be used, except for
    *                     RDBMS drivers that will use their dedicated SQL
-   *                     engine, unless OGRSQL is explicitely passed as the
+   *                     engine, unless OGRSQL is explicitly passed as the
    *                     dialect.
    * \return a new \c Layer that contains the matching \c Features. In case of
    * error, or no matching result sets, a \em null Layer will be returned.
@@ -437,8 +449,8 @@ public:
    * neither this wrapping.
    * \note The returned \c Layer will be automatically collected on its
    * destruction; i.e. unlike OGR API, no need to explicitly call \c
-   * OGRDataSource::ReleaseResultSet().
-   * \sa \c OGRDataSource::ExecuteSQL()
+   * GDALDataset::ReleaseResultSet().
+   * \sa \c GDALDataset::ExecuteSQL()
    */
   Layer ExecuteSQL(
     std::string const& statement,
@@ -456,37 +468,37 @@ public:
    * \see <em>Imperfect C++</em>, Matthew Wilson, Addisson-Welsey, par 24.6
    */
   operator int boolean ::* () const {
-    return m_DataSource ? &boolean::i : 0;
+    return m_DataSource ? &boolean::i : ITK_NULLPTR;
     }
 
   /** Flushes all changes to disk.
    * \throw itd::ExceptionObject in case the flush operation failed.
-   * \sa \c OGRDataSource::SyncToDisk()
+   * \sa \c GDALDataset::SyncToDisk()
    */
   void SyncToDisk();
 
   /** Returns whether a capability is avalaible.
    * \param[in] capabilityName  name of the capability to check.
    * \throw None
-   * \sa \c OGRDataSource::TestCapability()
+   * \sa \c GDALDataset::TestCapability()
    */
   bool HasCapability(std::string const& capabilityName) const;
 
-  /** Access to raw \c OGRDataSource.
+  /** Access to raw \c GDALDataset.
    * This function provides an abstraction leak in case deeper control on the
-   * underlying \c OGRDataSource is required.
-   * \pre The underlying \c OGRDataSource must be valid, i.e.
+   * underlying \c GDALDataset is required.
+   * \pre The underlying \c GDALDataset must be valid, i.e.
    * <tt>m_DataSource != 0</tt>, an assertion is fired otherwise.
-   * \warning You must under no circonstance try to delete the \c OGRDataSource
+   * \warning You must under no circonstance try to delete the \c GDALDataset
    * obtained this way.
    */
-  OGRDataSource & ogr();
+    ogr::version_proxy::GDALDatasetType & ogr();
 
 protected:
   /** Default constructor.
-   * The actual \c OGRDataSource is using the <em>in-memory</em> \c
+   * The actual \c GDALDataset is using the <em>in-memory</em> \c
    * OGRSFDriver: \c OGRMemDriver.
-   * \throw itk::ExceptionObject if the inner \c OGRDataSource cannot be
+   * \throw itk::ExceptionObject if the inner \c GDALDataset cannot be
    * opened.
    *
    * \note \c OGRRegisterAll() is implicitly called on construction
@@ -496,16 +508,16 @@ protected:
   /** Init constructor.
    * \post The newly constructed object owns the \c source parameter.
    */
-  DataSource(OGRDataSource * source, Modes::type mode);
+  DataSource(ogr::version_proxy::GDALDatasetType * source, Modes::type mode);
   /** Destructor.
-   * \post The \c OGRDataSource owned is released (if not null).
+   * \post The \c GDALDataset owned is released (if not null).
    */
-  virtual ~DataSource();
+  ~DataSource() ITK_OVERRIDE;
 
   static Pointer OpenDataSource(std::string const& datasourceName, Modes::type mode);
 
   /** Prints self into stream. */
-  virtual void PrintSelf(std::ostream& os, itk::Indent indent) const;
+  void PrintSelf(std::ostream& os, itk::Indent indent) const ITK_OVERRIDE;
 
 private:
   /**
@@ -516,7 +528,7 @@ private:
    * \pre The layer must available, 0 is returned otherwise.
    * \throw None
    * \internal this function is a simple encapsulation of \c
-   * OGRDataSource::GetLayer().
+   * GDALDataset::GetLayer().
    */
   OGRLayer* GetLayerUnchecked(size_t i);
   /** @copydoc OGRLayer* otb::ogr::DataSource::GetLayerUnchecked(size_t i)
@@ -529,8 +541,11 @@ private:
   size_t GetLayerID(std::string const& name) const;
   int GetLayerIDUnchecked(std::string const& name) const;
 
+  /** Get a string describing the dataset */
+  std::string GetDatasetDescription() const;
+
 private:
-  OGRDataSource  *m_DataSource;
+  ogr::version_proxy::GDALDatasetType *m_DataSource;
   Modes::type    m_OpenMode;
   int            m_FirstModifiableLayerID;
   }; // end class DataSource
@@ -550,4 +565,4 @@ namespace boost { namespace foreach {
 #include "otbOGRDataSourceWrapper.txx"
 #endif
 
-#endif // __otbOGRDataSourceWrapper_h
+#endif // otbOGRDataSourceWrapper_h

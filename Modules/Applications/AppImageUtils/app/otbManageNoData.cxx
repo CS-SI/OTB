@@ -20,6 +20,10 @@
 
 #include "otbImageToNoDataMaskFilter.h"
 #include "otbChangeNoDataValueFilter.h"
+#include "itkMaskImageFilter.h"
+#include "otbVectorImageToImageListFilter.h"
+#include "otbImageListToVectorImageFilter.h"
+#include "otbChangeInformationImageFilter.h"
 
 namespace otb
 {
@@ -44,20 +48,27 @@ public:
   typedef otb::ImageToNoDataMaskFilter<FloatVectorImageType,UInt8ImageType> FilterType;
   typedef otb::ChangeNoDataValueFilter<FloatVectorImageType,FloatVectorImageType> ChangeNoDataFilterType;
   
+  typedef otb::ImageList<FloatImageType> ImageListType;
+  typedef otb::VectorImageToImageListFilter<FloatVectorImageType,ImageListType> VectorToListFilterType;
+  typedef otb::ImageListToVectorImageFilter<ImageListType,FloatVectorImageType> ListToVectorFilterType;
+  typedef itk::MaskImageFilter<FloatImageType,UInt8ImageType,FloatImageType> MaskFilterType;
+  typedef otb::ChangeInformationImageFilter<FloatVectorImageType> ChangeInfoFilterType;
+
 private:
-  void DoInit()
+  void DoInit() ITK_OVERRIDE
   {
     SetName("ManageNoData");
     SetDescription("Manage No-Data");
     // Documentation
     SetDocName("No Data management");
-    SetDocLongDescription("This application has two modes. The first allows to build a mask of no-data pixels from the no-data flags read from the image file. The second allows to update the change the no-data value of an image (pixels value and metadata). This last mode also allows to replace NaN in images with a proper no-data value. To do so, one should activate the NaN is no-data option.");
+    SetDocLongDescription("This application has two modes. The first allows building a mask of no-data pixels from the no-data flags read from the image file. The second allows updating the change the no-data value of an image (pixels value and metadata). This last mode also allows replacing NaN in images with a proper no-data value. To do so, one should activate the NaN is no-data option.");
     SetDocLimitations("None");
     SetDocAuthors("OTB-Team");
-    SetDocSeeAlso("BanMath");
+    SetDocSeeAlso("BandMath");
+
+	AddDocTag(Tags::Manip);
     AddDocTag("Conversion");
     AddDocTag("Image Dynamic");
-    AddDocTag(Tags::Manip);
 
     AddParameter(ParameterType_InputImage,  "in",   "Input image");
     SetParameterDescription("in", "Input image");
@@ -71,7 +82,7 @@ private:
     DisableParameter("usenan");
    
     AddParameter(ParameterType_Choice,"mode","No-data handling mode");
-    SetParameterDescription("mode","Allows to choose between different no-data handling options");
+    SetParameterDescription("mode","Allows choosing between different no-data handling options");
 
     AddChoice("mode.buildmask","Build a no-data Mask");
     
@@ -89,8 +100,17 @@ private:
     SetParameterDescription("mode.changevalue.newv","The new no-data value");
     SetDefaultParameterInt("mode.changevalue.newv",0);
 
+    AddChoice("mode.apply","Apply a mask as no-data");
+
+    SetParameterDescription("mode.apply","Apply an external mask to an image using the no-data value of the input image");
+    AddParameter(ParameterType_InputImage, "mode.apply.mask", "Mask image");
+    SetParameterDescription("mode.apply.mask","Mask to be applied on input image (valid pixels have non null values)");
+    AddParameter(ParameterType_Float, "mode.apply.ndval", "Nodata value used");
+    SetParameterDescription("mode.apply.ndval","No Data value used according to the mask image");
+    SetDefaultParameterFloat("mode.apply.ndval", 0.0);
+
     SetParameterString("mode","buildmask");
-    
+
     AddRAMParameter();
 
     // Doc example parameter settings
@@ -100,13 +120,13 @@ private:
     SetDocExampleParameterValue("mode.buildmask.outv", "0");
   }
 
-  void DoUpdateParameters()
+  void DoUpdateParameters() ITK_OVERRIDE
   {
     // Nothing to do here for the parameters : all are independent
   }
 
 
- void DoExecute()
+ void DoExecute() ITK_OVERRIDE
   {
     FloatVectorImageType::Pointer inputPtr = this->GetParameterImage("in");
     
@@ -132,10 +152,66 @@ private:
       {
       SetParameterOutputImage("out",m_ChangeNoDataFilter->GetOutput());
       }
+    else if (GetParameterString("mode") == "apply")
+      {
+      m_MaskFilters.clear();
+      UInt8ImageType::Pointer maskPtr = this->GetParameterImage<UInt8ImageType>("mode.apply.mask");
+      unsigned int nbBands = inputPtr->GetNumberOfComponentsPerPixel();
+      itk::MetaDataDictionary &dict = inputPtr->GetMetaDataDictionary();
+      std::vector<bool> flags;
+      std::vector<double> values;
+      bool ret = otb::ReadNoDataFlags(dict,flags,values);
+      if (!ret)
+        {
+        flags.resize(nbBands,true);
+        values.resize(nbBands,GetParameterFloat("mode.apply.ndval"));
+        }
+
+      m_V2L = VectorToListFilterType::New();
+      m_V2L->SetInput(inputPtr);
+      ImageListType::Pointer inputList = m_V2L->GetOutput();
+      inputList->UpdateOutputInformation();
+      ImageListType::Pointer outputList = ImageListType::New();
+      for (unsigned int i=0 ; i<nbBands ; ++i)
+        {
+        if (flags[i])
+          {
+          MaskFilterType::Pointer masker = MaskFilterType::New();
+          masker->SetInput(inputList->GetNthElement(i));
+          masker->SetMaskImage(maskPtr);
+          masker->SetMaskingValue(0);
+          masker->SetOutsideValue(values[i]);
+          outputList->PushBack(masker->GetOutput());
+          m_MaskFilters.push_back(masker);
+          }
+        else
+          {
+          outputList->PushBack(inputList->GetNthElement(i));
+          }
+        }
+      m_L2V = ListToVectorFilterType::New();
+      m_L2V->SetInput(outputList);
+      if (!ret)
+        {
+        m_MetaDataChanger = ChangeInfoFilterType::New();
+        m_MetaDataChanger->SetInput(m_L2V->GetOutput());
+        m_MetaDataChanger->SetOutputMetaData<std::vector<bool> >(otb::MetaDataKey::NoDataValueAvailable,&flags);
+        m_MetaDataChanger->SetOutputMetaData<std::vector<double> >(otb::MetaDataKey::NoDataValue,&values);
+        SetParameterOutputImage("out",m_MetaDataChanger->GetOutput());
+        }
+      else
+        {
+        SetParameterOutputImage("out",m_L2V->GetOutput());
+        }
+      }
   }
 
   FilterType::Pointer m_Filter;
   ChangeNoDataFilterType::Pointer m_ChangeNoDataFilter;
+  std::vector<MaskFilterType::Pointer> m_MaskFilters;
+  VectorToListFilterType::Pointer m_V2L;
+  ListToVectorFilterType::Pointer m_L2V;
+  ChangeInfoFilterType::Pointer m_MetaDataChanger;
 };
 
 }

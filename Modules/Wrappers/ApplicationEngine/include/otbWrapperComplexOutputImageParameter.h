@@ -15,8 +15,8 @@
      PURPOSE.  See the above copyright notices for more information.
 
 =========================================================================*/
-#ifndef __otbWrapperComplexOutputImageParameter_h
-#define __otbWrapperComplexOutputImageParameter_h
+#ifndef otbWrapperComplexOutputImageParameter_h
+#define otbWrapperComplexOutputImageParameter_h
 
 #include "itkImageBase.h"
 #include "otbWrapperParameter.h"
@@ -32,7 +32,7 @@ namespace Wrapper
  * \ingroup OTBApplicationEngine
  */
 
-class ITK_ABI_EXPORT ComplexOutputImageParameter : public Parameter
+class OTBApplicationEngine_EXPORT ComplexOutputImageParameter : public Parameter
 {
 public:
   /** Standard class typedef */
@@ -61,16 +61,29 @@ public:
   /** Return any value */
   ImageBaseType* GetValue( void );
 
-  /** Set/Get PixelType to be used when saving */
+  /** Set/Get m_ComplexPixelType to be used when saving */
   itkSetMacro(ComplexPixelType, ComplexImagePixelType);
   itkGetMacro(ComplexPixelType, ComplexImagePixelType);
+
+  /** Set/Get m_DefaultComplexPixelType*/
+  itkSetMacro(DefaultComplexPixelType, ComplexImagePixelType);
+  itkGetMacro(DefaultComplexPixelType, ComplexImagePixelType);
 
   /** Set/Get available RAM value */
   itkSetMacro(RAMValue, unsigned int);
   itkGetMacro(RAMValue, unsigned int);
 
+  /** Implement the reset method (replace pixel type by default type) */
+  void Reset() ITK_OVERRIDE
+  {
+    m_ComplexPixelType = m_DefaultComplexPixelType;
+  }
+
+  /** Static method to convert pixel type into string */
+  static std::string ConvertPixelTypeToString(ComplexImagePixelType type);
+
   /** Return true if a filename is set */
-  bool HasValue() const;
+  bool HasValue() const ITK_OVERRIDE;
 
   void SetFileName (const char* filename)
   {
@@ -94,7 +107,7 @@ protected:
   /** Constructor */
   ComplexOutputImageParameter();
   /** Destructor */
-  virtual ~ComplexOutputImageParameter();
+  ~ComplexOutputImageParameter() ITK_OVERRIDE;
 
   template <class TInputImageType>
     void SwitchImageWrite();
@@ -106,7 +119,7 @@ protected:
   ImageBaseType::Pointer m_Image;
   std::string            m_FileName;
   ComplexImagePixelType         m_ComplexPixelType;
-
+  ComplexImagePixelType         m_DefaultComplexPixelType;
 
   typedef otb::ImageFileWriter<ComplexFloatImageType>  ComplexFloatWriterType;
   typedef otb::ImageFileWriter<ComplexDoubleImageType> ComplexDoubleWriterType;

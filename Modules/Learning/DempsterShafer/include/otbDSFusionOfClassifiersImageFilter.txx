@@ -15,12 +15,15 @@
      PURPOSE.  See the above copyright notices for more information.
 
 =========================================================================*/
-#ifndef __otbDSFusionOfClassifiersImageFilter_txx
-#define __otbDSFusionOfClassifiersImageFilter_txx
+#ifndef otbDSFusionOfClassifiersImageFilter_txx
+#define otbDSFusionOfClassifiersImageFilter_txx
 
 #include "otbDSFusionOfClassifiersImageFilter.h"
 #include "itkImageRegionIterator.h"
 #include "itkProgressReporter.h"
+
+#include "itkMetaDataObject.h"
+#include "otbMetaDataKey.h"
 
 namespace otb
 {
@@ -56,7 +59,7 @@ DSFusionOfClassifiersImageFilter<TInputImage, TOutputImage, TMaskImage>
 {
   if (this->GetNumberOfInputs() < 2)
     {
-    return 0;
+    return ITK_NULLPTR;
     }
   return static_cast<const MaskImageType *>(this->itk::ProcessObject::GetInput(1));
 }
@@ -84,6 +87,23 @@ DSFusionOfClassifiersImageFilter<TInputImage, TOutputImage, TMaskImage>
 }
 /* ************************************************************************************************************** */
 
+template <class TInputImage, class TOutputImage, class TMaskImage>
+void
+DSFusionOfClassifiersImageFilter<TInputImage, TOutputImage, TMaskImage>
+::GenerateOutputInformation()
+{
+  Superclass::GenerateOutputInformation();
+
+  // Set the NoData value
+  std::vector<bool> noDataValueAvailable;
+  noDataValueAvailable.push_back(true);
+  std::vector<double> noDataValue;
+  noDataValue.push_back(m_LabelForNoDataPixels);
+  itk::MetaDataDictionary& dict = this->GetOutput()->GetMetaDataDictionary();
+  itk::EncapsulateMetaData<std::vector<bool> >(dict,MetaDataKey::NoDataValueAvailable,noDataValueAvailable);
+  itk::EncapsulateMetaData<std::vector<double> >(dict,MetaDataKey::NoDataValue,noDataValue);
+}
+/* ************************************************************************************************************** */
 
 template <class TInputImage, class TOutputImage, class TMaskImage>
 void
@@ -287,7 +307,7 @@ DSFusionOfClassifiersImageFilter<TInputImage, TOutputImage, TMaskImage>
 
   // Calculation of the four constants A, B, C and K
   MassType A = 0, B = 1, C = 1, K;
-  K = 0; //supress warning. not sure about default value ??
+  K = 0; //suppress warning. not sure about default value ??
   for (itMapMOBClk = mapJointMassesStepI.begin(); itMapMOBClk != mapJointMassesStepI.end(); ++itMapMOBClk)
     {
     classLabelk = itMapMOBClk->first;

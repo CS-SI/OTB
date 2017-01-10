@@ -21,8 +21,10 @@
  * \internal this file is meant to be included by otbOGRDataSourceWrapper.h
  */
 
-#ifndef __otbOGRDataSourceWrapper_txx
-#define __otbOGRDataSourceWrapper_txx
+#ifndef otbOGRDataSourceWrapper_txx
+#define otbOGRDataSourceWrapper_txx
+
+#include "otbOGRDataSourceWrapper.h"
 
 /*===========================================================================*/
 /*===============================[ Includes ]================================*/
@@ -38,9 +40,9 @@
 // to the compilation mode of the client code.
 
 inline
-OGRDataSource & otb::ogr::DataSource::ogr()
+otb::ogr::version_proxy::GDALDatasetType & otb::ogr::DataSource::ogr()
 {
-  assert(m_DataSource && "OGRDataSource not initialized");
+  assert(m_DataSource && "GDALDataset not initialized");
   return *m_DataSource;
 }
 
@@ -127,4 +129,4 @@ Value otb::ogr::DataSource::layer_iter<Value>::dereference() const
 }
 
 
-#endif // __otbOGRDataSourceWrapper_txx
+#endif // otbOGRDataSourceWrapper_txx

@@ -18,8 +18,6 @@ otbSarRadiometricCalibrationToImageFilterCompareTest.cxx
 otbSarBrightnessFunctor.cxx
 otbSarBrightnessFunctionWithoutNoise.cxx
 otbSarRadiometricCalibrationFunction.cxx
-otbSarRadiometricCalibrationFunctor.cxx
-otbSarRadiometricCalibrationFunctorWithoutNoise.cxx
 otbSarRadiometricCalibrationFunctionWithoutNoise.cxx
 otbTerraSarBrightnessImageComplexFilterTest.cxx
 otbSarRadiometricCalibrationToImageFilterWithComplexPixelTest.cxx
@@ -51,17 +49,17 @@ otb_add_test(NAME raTvSarBrightnessToImageFilterWithoutNoise COMMAND  otbSARCali
   1000 1000 250 250 # Extract
   )
 
-otb_add_test(NAME raTvTerraSarBrightnessImageFilterUPSALA COMMAND otbSARCalibrationTestDriver
-  --compare-image ${EPSILON_12}
-  ${BASELINE}/raTvTerraSarBrightnessImageFilter_UPSALA.tif
-  ${TEMP}/raTvTerraSarBrightnessImageFilter_UPSALA.tif
-  otbTerraSarBrightnessImageFilterTest
-  LARGEINPUT{TERRASARX/UPSALA_GLACIER/TSX1_SAR__MGD/IMAGEDATA/IMAGE_HH_SRA_strip_012.tif}
-  ${TEMP}/raTvTerraSarBrightnessImageFilter_UPSALA.tif
-  1 # use metadata
-  0 # results in linear scale
-  2000 2000 250 250 # Extract
-  )
+#otb_add_test(NAME raTvTerraSarBrightnessImageFilterUPSALA COMMAND otbSARCalibrationTestDriver
+  #--compare-image ${EPSILON_12}
+  #${BASELINE}/raTvTerraSarBrightnessImageFilter_UPSALA.tif
+  #${TEMP}/raTvTerraSarBrightnessImageFilter_UPSALA.tif
+  #otbTerraSarBrightnessImageFilterTest
+  #LARGEINPUT{TERRASARX/UPSALA_GLACIER/TSX1_SAR__MGD/IMAGEDATA/IMAGE_HH_SRA_strip_012.tif}
+  #${TEMP}/raTvTerraSarBrightnessImageFilter_UPSALA.tif
+  #1 # use metadata
+  #0 # results in linear scale
+  #2000 2000 250 250 # Extract
+  #)
 
 otb_add_test(NAME raTvTerraSarBrightnessImageFilterTest COMMAND otbSARCalibrationTestDriver
   --compare-image ${EPSILON_12}
@@ -84,15 +82,15 @@ otb_add_test(NAME raTvSarRadiometricCalibrationToImageWithRealPixelFilter_TSX_PA
   1000 1000 250 250 # Extract
   )
 
-otb_add_test(NAME raTvSarRadiometricCalibrationToImageWithRealPixelFilter_TSX_UPSALA COMMAND otbSARCalibrationTestDriver
-  --compare-image ${EPSILON_12}
-  ${BASELINE}/raTvSarRadiometricCalibrationToImageFilter_TSX_UPSALA.tif
-  ${TEMP}/raTvSarRadiometricCalibrationToImageFilter_TSX_UPSALA.tif
-  otbSarRadiometricCalibrationToImageFilterWithRealPixelTest
-  LARGEINPUT{TERRASARX/UPSALA_GLACIER/TSX1_SAR__MGD/IMAGEDATA/IMAGE_HH_SRA_strip_012.tif}
-  ${TEMP}/raTvSarRadiometricCalibrationToImageFilter_TSX_UPSALA.tif
-  2000 2000 250 250 # Extract
-  )
+#otb_add_test(NAME raTvSarRadiometricCalibrationToImageWithRealPixelFilter_TSX_UPSALA COMMAND otbSARCalibrationTestDriver
+  #--compare-image ${EPSILON_12}
+  #${BASELINE}/raTvSarRadiometricCalibrationToImageFilter_TSX_UPSALA.tif
+  #${TEMP}/raTvSarRadiometricCalibrationToImageFilter_TSX_UPSALA.tif
+  #otbSarRadiometricCalibrationToImageFilterWithRealPixelTest
+  #LARGEINPUT{TERRASARX/UPSALA_GLACIER/TSX1_SAR__MGD/IMAGEDATA/IMAGE_HH_SRA_strip_012.tif}
+  #${TEMP}/raTvSarRadiometricCalibrationToImageFilter_TSX_UPSALA.tif
+  #2000 2000 250 250 # Extract
+  #)
 
 otb_add_test(NAME raTuTerraSarBrightnessImageFilterNew COMMAND otbSARCalibrationTestDriver
   otbTerraSarBrightnessImageFilterNew
@@ -127,6 +125,28 @@ otb_add_test(NAME raTvSarRadiometricCalibrationToImageWithComplexPixelFilterWith
   1000 1000 250 250 # Extract
   )
 
+#Sentinel-1 L1, SLC
+otb_add_test(NAME raTvSarRadiometricCalibrationToImageWithComplexPixelFilterWithoutNoise_SENTINEL1 COMMAND  otbSARCalibrationTestDriver
+  --compare-image ${EPSILON_12}
+  ${BASELINE}/raTvSarRadiometricCalibrationToImageWithComplexPixelFilterWithoutNoise_SENTINEL1_VV.tif
+  ${TEMP}/raTvSarRadiometricCalibrationToImageWithComplexPixelFilterWithoutNoise_SENTINEL1_VV.tif
+  otbSarRadiometricCalibrationToImageFilterWithComplexPixelTestWithoutNoise
+  LARGEINPUT{SENTINEL1/S1A_S6_SLC__1SSV_20150619T195043/measurement/s1a-s6-slc-vv-20150619t195043-20150619t195101-006447-00887d-001.tiff}
+  ${TEMP}/raTvSarRadiometricCalibrationToImageWithComplexPixelFilterWithoutNoise_SENTINEL1_VV.tif
+  1100 1900 450 450 # Extract
+  )
+
+#Radarsat2
+otb_add_test(NAME raTvSarRadiometricCalibrationToImageWithComplexPixelFilterWithoutNoise_RADARSAT2 COMMAND  otbSARCalibrationTestDriver
+  --compare-image ${EPSILON_6}
+  ${BASELINE}/raTvSarRadiometricCalibrationToImageWithComplexPixelFilterWithoutNoise_RADARSAT2_HV.tif
+  ${TEMP}/raTvSarRadiometricCalibrationToImageWithComplexPixelFilterWithoutNoise_RADARSAT2_HV.tif
+  otbSarRadiometricCalibrationToImageFilterWithComplexPixelTestWithoutNoise
+  LARGEINPUT{RADARSAT2/ALTONA/Fine_Quad-Pol_Dataset/PK6621_DK406_FQ9_20080405_124900_HH_VV_HV_VH_SLC_Altona/imagery_HV.tif}
+  ${TEMP}/raTvSarRadiometricCalibrationToImageWithComplexPixelFilterWithoutNoise_RADARSAT2_HV.tif
+  11 11 650 750 # Extract
+  )
+
 otb_add_test(NAME raTuSarBrightnessFunctorWithoutNoise COMMAND otbSARCalibrationTestDriver
   otbSarBrightnessFunctorWithoutNoise
   )
@@ -153,7 +173,7 @@ otb_add_test(NAME raTvSarBrightnessToImageWithComplexPixelFilter COMMAND  otbSAR
   1000 1000 250 250 # Extract
   )
 
-otb_add_test(NAME raTuSarParametricMapFunction COMMAND otbSARCalibrationTestDriver
+otb_add_test(NAME raTvSarParametricMapFunction COMMAND otbSARCalibrationTestDriver
   --compare-ascii ${NOTOL}
   ${BASELINE_FILES}/raTvSarParametricMapFunctionOutputAscii.txt
   ${TEMP}/raTvSarParametricMapFunctionOutputAscii.txt
@@ -190,13 +210,6 @@ otb_add_test(NAME raTvSarRadiometricCalibrationFunction COMMAND otbSARCalibratio
   ${TEMP}/raTvSarRadiometricCalibrationFunctionOutputAsciiWithNoise.txt
   )
 
-otb_add_test(NAME raTuSarRadiometricCalibrationFunctor COMMAND otbSARCalibrationTestDriver
-  otbSarRadiometricCalibrationFunctor
-  )
-
-otb_add_test(NAME raTuSarRadiometricCalibrationFunctorWithoutNoise COMMAND otbSARCalibrationTestDriver
-  otbSarRadiometricCalibrationFunctorWithoutNoise
-  )
 
 otb_add_test(NAME raTvSarRadiometricCalibrationFunctionWithoutNoise COMMAND otbSARCalibrationTestDriver
   --compare-ascii ${NOTOL}
@@ -207,17 +220,17 @@ otb_add_test(NAME raTvSarRadiometricCalibrationFunctionWithoutNoise COMMAND otbS
   ${TEMP}/raTvSarRadiometricCalibrationFunctionOutputAsciiWithoutNoise.txt
   )
 
-otb_add_test(NAME raTvTerraSarBrightnessImageComplexFilterTORONTO COMMAND otbSARCalibrationTestDriver
-  --compare-image ${EPSILON_12}
-  ${BASELINE}/raTvTerraSarBrightnessComplexImageFilter_TORONTO.tif
-  ${TEMP}/raTvTerraSarBrightnessImageComplexFilter_TORONTO.tif
-  otbTerraSarBrightnessImageComplexFilterTest
-  LARGEINPUT{TERRASARX/TORONTO/TSX1_SAR__SSC/IMAGEDATA/IMAGE_HH_SRA_spot_074.cos}
-  ${TEMP}/raTvTerraSarBrightnessImageComplexFilter_TORONTO.tif
-  1 # use metadata
-  0 # results in linear scale
-  2000 2000 250 250 # Extract
-  )
+#otb_add_test(NAME raTvTerraSarBrightnessImageComplexFilterTORONTO COMMAND otbSARCalibrationTestDriver
+  #--compare-image ${EPSILON_12}
+  #${BASELINE}/raTvTerraSarBrightnessComplexImageFilter_TORONTO.tif
+  #${TEMP}/raTvTerraSarBrightnessImageComplexFilter_TORONTO.tif
+  #otbTerraSarBrightnessImageComplexFilterTest
+  #LARGEINPUT{TERRASARX/TORONTO/TSX1_SAR__SSC/IMAGEDATA/IMAGE_HH_SRA_spot_074.cos}
+  #${TEMP}/raTvTerraSarBrightnessImageComplexFilter_TORONTO.tif
+  #1 # use metadata
+  #0 # results in linear scale
+  #2000 2000 250 250 # Extract
+  #)
 
 otb_add_test(NAME raTvTerraSarBrightnessImageComplexFilterTest COMMAND otbSARCalibrationTestDriver
   --compare-image ${EPSILON_12}
@@ -240,15 +253,15 @@ otb_add_test(NAME raTvSarRadiometricCalibrationToImageWithComplexPixelFilter_TSX
   1000 1000 250 250 # Extract
   )
 
-otb_add_test(NAME raTvSarRadiometricCalibrationToImageWithComplexPixelFilter_TSX_TORONTO COMMAND otbSARCalibrationTestDriver
-  --compare-image ${EPSILON_12}
-  ${BASELINE}/raTvSarRadiometricCalibrationToImageFilter_TSX_TORONTO.tif
-  ${TEMP}/raTvSarRadiometricCalibrationToImageFilter_TSX_TORONTO.tif
-  otbSarRadiometricCalibrationToImageFilterWithComplexPixelTest
-  LARGEINPUT{TERRASARX/TORONTO/TSX1_SAR__SSC/IMAGEDATA/IMAGE_HH_SRA_spot_074.cos}
-  ${TEMP}/raTvSarRadiometricCalibrationToImageFilter_TSX_TORONTO.tif
-  2000 2000 250 250 # Extract
-  )
+#otb_add_test(NAME raTvSarRadiometricCalibrationToImageWithComplexPixelFilter_TSX_TORONTO COMMAND otbSARCalibrationTestDriver
+  #--compare-image ${EPSILON_12}
+  #${BASELINE}/raTvSarRadiometricCalibrationToImageFilter_TSX_TORONTO.tif
+  #${TEMP}/raTvSarRadiometricCalibrationToImageFilter_TSX_TORONTO.tif
+  #otbSarRadiometricCalibrationToImageFilterWithComplexPixelTest
+  #LARGEINPUT{TERRASARX/TORONTO/TSX1_SAR__SSC/IMAGEDATA/IMAGE_HH_SRA_spot_074.cos}
+  #${TEMP}/raTvSarRadiometricCalibrationToImageFilter_TSX_TORONTO.tif
+  #2000 2000 250 250 # Extract
+  #)
 
 otb_add_test(NAME raTvSarBrightnessToImageFilter COMMAND  otbSARCalibrationTestDriver
   --compare-image ${EPSILON_12}
@@ -259,4 +272,3 @@ otb_add_test(NAME raTvSarBrightnessToImageFilter COMMAND  otbSARCalibrationTestD
   ${TEMP}/raTvSarBrightnessToImageFilter_TSX_PANGKALANBUUN_HH.tif
   1000 1000 250 250 # Extract
   )
-

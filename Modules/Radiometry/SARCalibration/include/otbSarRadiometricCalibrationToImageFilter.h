@@ -18,8 +18,8 @@
      PURPOSE.  See the above copyright notices for more information.
 
 =========================================================================*/
-#ifndef __otbSarRadiometricCalibrationToImageFilter_h
-#define __otbSarRadiometricCalibrationToImageFilter_h
+#ifndef otbSarRadiometricCalibrationToImageFilter_h
+#define otbSarRadiometricCalibrationToImageFilter_h
 
 #include "otbSarRadiometricCalibrationFunction.h"
 #include "otbFunctionToImageFilter.h"
@@ -28,9 +28,29 @@ namespace otb
 {
 
 /** \class SarRadiometricCalibrationToImageFilter
-  * \brief Evaluates the SarRadiometricCalibrationFunction onto a source image
+ * \brief Evaluates the SarRadiometricCalibrationFunction onto a source image
+ * The BeforeThreadedGenerateData create a SarImageMetadataInterface based on
+ * input metadata dictionary. The nature of product(TerrSARX, Sentinel1, etc..)
+ * are thus detected  automatically from this. The filter then reads necessary
+ * parameters required to perform SarCalibration in a generic way.
  *
- * The function has to inherit from itkImageFunction
+ * BeforeThreadedGenerateData() instantiate a SarRadiometricCalibrationFunction
+ * and pass the values taken from SarImageMetadataInterface instance to it. This
+ * is where the actual computation of sigma (backscatter) occurs.
+ *
+ * Noise, Antenna pattern gain (old && new), range spread loss, incidence angle
+ * data members used in this class are all instances of SarPrametricFunction
+ * class. Each have a Evaluate() method and a special
+ * EvaluateParametricCoefficient() which computes the actual value.
+ *
+ * The technical details and more discussion of SarCalibration can be found in jira
+ * story #863.
+ *
+ * \see \c otb::SarParametricFunction
+ * \see \c otb::SarCalibrationLookupBase
+ * References (Retrieved on 08-Sept-2015)
+ * Sentinel1 - https://sentinel.esa.int/web/sentinel/sentinel-1-sar-wiki/-/wiki/Sentinel%20One/Application+of+Radiometric+Calibration+LUT
+ * Radarsat2 - http://gs.mdacorporation.com/products/sensor/radarsat2/RS2_Product_Description.pdf
  *
  * \ingroup ImageFilters
  *
@@ -76,19 +96,36 @@ public:
   typedef typename FunctionType::ParametricFunctionConstPointer ParametricFunctionConstPointer;
   typedef typename FunctionType::ParametricFunctionType         ParametricFunctionType;
 
+
+  /** Enable/disable the noise flag in SarRadiometricCalibrationFunction */
   void SetEnableNoise(bool inArg)
   {
     this->GetFunction()->SetEnableNoise(inArg);
   }
+
+  itkSetMacro(LookupSelected, short);
+  itkGetConstMacro(LookupSelected, short);
+
 protected:
+  /** Default ctor */
   SarRadiometricCalibrationToImageFilter();
-  virtual ~SarRadiometricCalibrationToImageFilter() {}
+
+  /** Empty, default virtual dtor */
+  ~SarRadiometricCalibrationToImageFilter() ITK_OVERRIDE {}
+
+  /** Generate output information */
+  void GenerateOutputInformation() ITK_OVERRIDE;
 
   /** Update the function list and input parameters*/
-  virtual void BeforeThreadedGenerateData();
+  void BeforeThreadedGenerateData() ITK_OVERRIDE;
+
 private:
+
   SarRadiometricCalibrationToImageFilter(const Self &); //purposely not implemented
   void operator =(const Self&); //purposely not implemented
+
+
+  short m_LookupSelected;
 
 };
 

@@ -41,7 +41,6 @@ int otbWrapperQtWidgetShowWidget(int argc, char* argv[])
     std::copy(argv + 1, argv + argc, std::back_inserter(modulePathList));
 
     // Load the path in the environment
-    std::string specificEnv("ITK_AUTOLOAD_PATH=");
     std::list<std::string>::const_iterator it = modulePathList.begin();
     while( it != modulePathList.end() )
       {
@@ -81,7 +80,7 @@ int otbWrapperQtWidgetShowWidget(int argc, char* argv[])
     QtWidgetProgressReport* progressReport =  new QtWidgetProgressReport(gui->GetModel());
     progressReport->SetApplication(app);
   
-    // Create a dock widget containg the progress widget
+    // Create a dock widget containing the progress widget
     QDockWidget* qdock = new QDockWidget("Progress Reporting ...", mainWindow);
     qdock->setWidget(progressReport);
   
@@ -105,6 +104,8 @@ int otbWrapperQtWidgetShowWidget(int argc, char* argv[])
     // clean main window
     if (mainWindow) delete mainWindow;
     }
+
+  ApplicationRegistry::CleanRegistry();
   
   if (result)
     {

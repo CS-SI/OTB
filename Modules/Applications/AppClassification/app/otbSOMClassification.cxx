@@ -67,7 +67,13 @@ public:
 
 
 private:
-  void DoInit()
+  SOMClassification()
+    {
+    m_UseMask = false;
+    m_Classifier = ClassificationFilterType::New();
+    }
+
+  void DoInit() ITK_OVERRIDE
   {
     SetName("SOMClassification");
     SetDescription("SOM image classification.");
@@ -79,14 +85,15 @@ private:
     SetDocAuthors("OTB-Team");
     SetDocSeeAlso(" ");
 
+	AddDocTag(Tags::Learning);
     AddDocTag(Tags::Segmentation);
-    AddDocTag(Tags::Learning);
 
     AddParameter(ParameterType_InputImage,  "in",   "InputImage");
     SetParameterDescription("in", "Input image to classify.");
 
     AddParameter(ParameterType_OutputImage,  "out",   "OutputImage");
     SetParameterDescription("out", "Output classified image (each pixel contains the index of its corresponding vector in the SOM).");
+    SetDefaultOutputPixelType("out",ImagePixelType_uint8);
 
     AddParameter(ParameterType_InputImage,  "vm",   "ValidityMask");
     SetParameterDescription("vm", "Validity mask (only pixels corresponding to a mask value greater than 0 will be used for learning)");
@@ -166,12 +173,12 @@ private:
     SetDocExampleParameterValue("iv", "0");
   }
 
-  void DoUpdateParameters()
+  void DoUpdateParameters() ITK_OVERRIDE
   {
     // Nothing to do
   }
 
-  void DoExecute()
+  void DoExecute() ITK_OVERRIDE
   {
     // initiating random number generation
     itk::Statistics::MersenneTwisterRandomVariateGenerator::Pointer
@@ -366,7 +373,6 @@ private:
     /*******************************************/
     otbAppLogINFO("-- CLASSIFICATION --");
 
-    m_Classifier = ClassificationFilterType::New();
     m_Classifier->SetInput(input);
     m_Classifier->SetMap(m_SOMMap);
     if (m_UseMask) m_Classifier->SetInputMask(mask);
