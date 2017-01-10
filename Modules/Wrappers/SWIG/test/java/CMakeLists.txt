@@ -1,12 +1,16 @@
 include( UseJava )
 
 set(TEST_DRIVER otbTestDriver
-    --add-before-env ITK_AUTOLOAD_PATH $<TARGET_FILE_DIR:otbapp_Smoothing>
+    --add-before-env OTB_APPLICATION_PATH $<TARGET_FILE_DIR:otbapp_Smoothing>
 )
 
 set( PATH_SEPARATOR ":")
 if (WIN32)
   set( PATH_SEPARATOR ";")
+  # on windows, loading the module _otbApplication requires the otbossimplugins*.dll
+  # which is in the 'bin' folder
+  set(TEST_DRIVER ${TEST_DRIVER}
+    --add-before-env PATH ${OTB_BINARY_DIR}/bin)
 endif()
 
 set( CMAKE_JAVA_INCLUDE_PATH ${OTBSWIGWrapper_BINARY_DIR}/src/org.otb.application.jar )

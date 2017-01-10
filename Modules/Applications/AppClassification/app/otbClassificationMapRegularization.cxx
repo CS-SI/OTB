@@ -76,7 +76,7 @@ public:
 
 
 private:
-  void DoInit()
+  void DoInit() ITK_OVERRIDE
   {
     SetName("ClassificationMapRegularization");
     SetDescription("Filters the input labeled image using Majority Voting in a ball shaped neighbordhood.");
@@ -93,18 +93,19 @@ private:
 
     /** GROUP IO CLASSIFICATION */
     AddParameter(ParameterType_Group,"io","Input and output images");
-    SetParameterDescription("io","This group of parameters allows to set input and output images for classification map regularization by Majority Voting.");
+    SetParameterDescription("io","This group of parameters allows setting input and output images for classification map regularization by Majority Voting.");
 
     AddParameter(ParameterType_InputImage, "io.in",  "Input classification image");
     SetParameterDescription( "io.in", "The input labeled image to regularize.");
 
     AddParameter(ParameterType_OutputImage, "io.out",  "Output regularized image");
     SetParameterDescription( "io.out", "The output regularized labeled image.");
-    SetParameterOutputImagePixelType( "io.out", ImagePixelType_uint8);
+    SetDefaultOutputPixelType( "io.out", ImagePixelType_uint8);
 
     /** GROUP Regularization parameters */
     AddParameter(ParameterType_Group,"ip","Regularization parameters");
-    SetParameterDescription("ip","This group allows to set common parameters for classification map regularization by Majority Voting.");
+
+    SetParameterDescription("ip","This group allows setting parameters for classification map regularization by Majority Voting.");
 
     AddParameter(ParameterType_Choice, "ip.method", "Select majority voting input");
     SetParameterDescription("ip.method", "Selection of the  input for majority voting.(radius/segmentation image).");
@@ -120,8 +121,8 @@ private:
     AddChoice("ip.method.image","Input Image (Segmentation)");
     SetParameterDescription("ip.method.image","Perform regularization based on given input segmentation image");
 
-    AddParameter(ParameterType_InputImage, "ip.method.image.value",     "Input Image (Segmentation)");
-    SetParameterDescription( "ip.method.image.value", "Input 2 : segmentation provided by a label image");
+    AddParameter(ParameterType_InputImage, "ip.method.image.inseg",     "Input Image (Segmentation)");
+    SetParameterDescription( "ip.method.image.inseg", "Segmentation image provided as a label image to provide the object where to compute majority voting.");
 
     //method.segment.
     AddParameter(ParameterType_Int, "ip.method.image.nodatavalue", "The label that corresponds to no data within the segmentation image");
@@ -134,14 +135,21 @@ private:
     AddParameter(ParameterType_Empty, "ip.suvbool", "Multiple majority: Undecided(X)/Original");
     SetParameterDescription("ip.suvbool", "Pixels with more than 1 majority class are marked as Undecided if this parameter is checked (true), or keep their Original labels otherwise (false). Please note that the Undecided value must be different from existing labels in the input labeled image. By default, 'ip.suvbool = false'.");
 
-     AddParameter(ParameterType_Int, "ip.nodatalabel", "The label that corresponds to no data within the classification image");
-     SetParameterDescription("ip.nodatalabel", "The label that corresponds to no data within the classification image. Such input pixels keep their NoData label in the output image. By default, 'ip.nodatalabel = 0'.");
-     SetDefaultParameterInt("ip.nodatalabel", 0.0);
+    AddParameter(ParameterType_Int, "ip.nodatalabel", "The label that corresponds to no data within the classification image");
+    SetParameterDescription("ip.nodatalabel", "The label that corresponds to no data within the classification image. Such input pixels keep their NoData label in the output image. By default, 'ip.nodatalabel = 0'.");
+    SetDefaultParameterInt("ip.nodatalabel", 0.0);
 
 
     AddParameter(ParameterType_Int, "ip.undecidedlabel", "Label for the Undecided class");
     SetParameterDescription("ip.undecidedlabel", "Label for the Undecided class. By default, 'ip.undecidedlabel = 0'.");
     SetDefaultParameterInt("ip.undecidedlabel", 0.0);
+
+    AddParameter(ParameterType_Empty, "ip.method.radius.onlyisolatedpixels", "Process isolated pixels only");
+    SetParameterDescription("ip.onlyisolatedpixels", "Only pixels whose label is unique in the neighbordhood will be processed. By default, 'ip.onlyisolatedpixels = false'.");
+
+    AddParameter(ParameterType_Int, "ip.method.radius.isolatedthreshold", "Threshold for isolated pixels");
+    SetParameterDescription("ip.isolatedthreshold", "Maximum number of neighbours with the same label as the center pixel to consider that it is an isolated pixel. By default, 'ip.isolatedthreshold = 1'.");       
+    SetDefaultParameterInt("ip.isolatedthreshold", 1);
 
 
     AddRAMParameter();
@@ -152,15 +160,17 @@ private:
     SetDocExampleParameterValue("ip.method.radius.value", "2");
     SetDocExampleParameterValue("ip.nodatalabel", "4");
     SetDocExampleParameterValue("ip.suvbool", "true");
+    SetDocExampleParameterValue("ip.onlyisolatedpixels", "true");
+    SetDocExampleParameterValue("ip.nodatalabel", "10");
     SetDocExampleParameterValue("ip.undecidedlabel", "7");
   }
 
-  void DoUpdateParameters()
+  void DoUpdateParameters() ITK_OVERRIDE
   {
     // Nothing to do here : all parameters are independent
   }
 
-  void DoExecute()
+  void DoExecute() ITK_OVERRIDE
   {
     // Majority Voting
     m_NeighMajVotingFilter = NeighborhoodMajorityVotingFilterType::New();
@@ -196,6 +206,17 @@ private:
         m_NeighMajVotingFilter->SetKeepOriginalLabelBool(true);
         }
 
+      // Process isolated pixels only
+      if (IsParameterEnabled("ip.method.radius.onlyisolatedpixels"))
+        {
+        m_NeighMajVotingFilter->SetOnlyIsolatedPixels(true);
+        m_NeighMajVotingFilter->SetIsolatedThreshold(GetParameterInt("ip.method.radius.isolatedthreshold"));
+        }
+      else
+        {
+        m_NeighMajVotingFilter->SetOnlyIsolatedPixels(false);
+        }
+
       /** REGULARIZATION OF CLASSIFICATION */
       SetParameterOutputImage<IOLabelImageType>("io.out", m_NeighMajVotingFilter->GetOutput());
       }
@@ -203,28 +224,27 @@ private:
       {
       otbAppLogINFO("Majority Voting with input segmentation image");
 
-     UInt16ImageType::Pointer inputSegImage = GetParameterUInt16Image("ip.method.image.value");
+      UInt16ImageType::Pointer inputSegImage = GetParameterUInt16Image("ip.method.image.inseg");
 
-     //Instanciations
-     m_LabelImageToLabelMapFilter = LabelImageToLabelMapFilterType::New();
-     m_LabelMapToAttributeImageFilter = LabelMapToAttributeImageFilterType::New();
-     m_LabelMapWithMajorityClassLabelFilter = LabelMapWithMajorityClassLabelFilterType::New();
+      //Instanciations
+      m_LabelImageToLabelMapFilter = LabelImageToLabelMapFilterType::New();
+      m_LabelMapToAttributeImageFilter = LabelMapToAttributeImageFilterType::New();
+      m_LabelMapWithMajorityClassLabelFilter = LabelMapWithMajorityClassLabelFilterType::New();
 
-     m_LabelImageToLabelMapFilter->SetInput(inputSegImage);
+      m_LabelImageToLabelMapFilter->SetInput(inputSegImage);
 
-     m_LabelMapWithMajorityClassLabelFilter->SetInput(m_LabelImageToLabelMapFilter->GetOutput());
-     m_LabelMapWithMajorityClassLabelFilter->SetClassifImage(inImage);
-     //Nodata
-     m_LabelMapWithMajorityClassLabelFilter->SetNoDataSegValue(GetParameterInt("ip.method.image.nodatavalue"));
-     m_LabelMapWithMajorityClassLabelFilter->SetNoDataClassifValue(GetParameterInt("ip.nodatalabel"));
+      m_LabelMapWithMajorityClassLabelFilter->SetInput(m_LabelImageToLabelMapFilter->GetOutput());
+      m_LabelMapWithMajorityClassLabelFilter->SetClassifImage(inImage);
+      //Nodata
+      m_LabelMapWithMajorityClassLabelFilter->SetNoDataSegValue(GetParameterInt("ip.method.image.nodatavalue"));
+      m_LabelMapWithMajorityClassLabelFilter->SetNoDataClassifValue(GetParameterInt("ip.nodatalabel"));
 
-     //m_Attribute2Image
-     m_LabelMapToAttributeImageFilter->SetInput(m_LabelMapWithMajorityClassLabelFilter->GetOutput());
+      //m_Attribute2Image
+      m_LabelMapToAttributeImageFilter->SetInput(m_LabelMapWithMajorityClassLabelFilter->GetOutput());
 
-     //set output image
-     SetParameterOutputImage<IOLabelImageType>("io.out", m_LabelMapToAttributeImageFilter->GetOutput());
-   }
-
+      //set output image
+      SetParameterOutputImage<IOLabelImageType>("io.out", m_LabelMapToAttributeImageFilter->GetOutput());
+      }
     else
       {
       otbAppLogINFO("Unknow method selected.");

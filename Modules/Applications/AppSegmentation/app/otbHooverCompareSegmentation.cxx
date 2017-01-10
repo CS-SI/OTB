@@ -127,7 +127,7 @@ public:
         <FloatPixelType, Int16PixelType> >          HooverColorFilterType;
 
 private:
-  void DoInit()
+  void DoInit() ITK_OVERRIDE
   {
     SetName("HooverCompareSegmentation");
     SetDescription("Compare two segmentations with Hoover metrics");
@@ -165,10 +165,12 @@ private:
 
     AddParameter(ParameterType_OutputImage,  "outgt",    "Colored ground truth output");
     SetParameterDescription( "outgt", "The colored ground truth output image." );
+    SetDefaultOutputPixelType("outgt",ImagePixelType_uint8);
     MandatoryOff("outgt");
 
     AddParameter(ParameterType_OutputImage,  "outms",    "Colored machine segmentation output");
     SetParameterDescription( "outms", "The colored machine segmentation output image." );
+    SetDefaultOutputPixelType("outms",ImagePixelType_uint8);
     MandatoryOff("outms");
 
     // TODO : add color settings ?
@@ -195,12 +197,12 @@ private:
     SetDocExampleParameterValue("outgt", "maur_colored_GT.tif uint8");
   }
 
-  void DoUpdateParameters()
+  void DoUpdateParameters() ITK_OVERRIDE
   {
     // Nothing to do here : all parameters are independent
   }
 
-  void DoExecute()
+  void DoExecute() ITK_OVERRIDE
   {
     UInt32ImageType::Pointer inputGT = GetParameterUInt32Image("ingt");
     UInt32ImageType::Pointer inputMS = GetParameterUInt32Image("inms");

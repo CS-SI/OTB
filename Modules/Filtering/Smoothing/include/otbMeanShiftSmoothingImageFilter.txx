@@ -16,8 +16,8 @@
 
 =========================================================================*/
 
-#ifndef __otbMeanShiftSmoothingImageFilter_txx
-#define __otbMeanShiftSmoothingImageFilter_txx
+#ifndef otbMeanShiftSmoothingImageFilter_txx
+#define otbMeanShiftSmoothingImageFilter_txx
 
 #include "otbMeanShiftSmoothingImageFilter.h"
 #include "itkImageRegionIterator.h"
@@ -35,10 +35,11 @@ MeanShiftSmoothingImageFilter<TInputImage, TOutputImage, TKernel, TOutputIterati
   // , m_SpatialRadius(???)
       , m_Threshold(1e-3), m_MaxIterationNumber(10)
       // , m_Kernel(...)
-      // , m_NumberOfComponentsPerPixel(...)
+      , m_NumberOfComponentsPerPixel(0)
       // , m_JointImage(0)
       // , m_ModeTable(0)
-      , m_ModeSearch(true)
+      , m_ModeSearch(false)
+      , m_ThreadIdNumberOfBits(0)
 #if 0
       , m_BucketOptimization(false)
 #endif
@@ -240,7 +241,7 @@ void MeanShiftSmoothingImageFilter<TInputImage, TOutputImage, TKernel, TOutputIt
   // m_JointImage is the input data expressed in the joint spatial-range
   // domain, i.e. spatial coordinates are concatenated to the range values.
   // Moreover, pixel components in this image are normalized by their respective
-  // (spatial or range) bandwith.
+  // (spatial or range) bandwidth.
   typedef Meanshift::SpatialRangeJointDomainTransform<InputImageType, RealVectorImageType> FunctionType;
   typedef otb::UnaryFunctorWithIndexWithOutputSizeImageFilter<InputImageType, RealVectorImageType, FunctionType>
       JointImageFunctorType;
@@ -375,7 +376,7 @@ void MeanShiftSmoothingImageFilter<TInputImage, TOutputImage, TKernel, TOutputIt
   neighborhoodRegion.SetSize(regionSize);
 
   RealType weightSum = 0;
-  RealVector jointNeighbor(ImageDimension + m_NumberOfComponentsPerPixel), shifts(ImageDimension + m_NumberOfComponentsPerPixel);
+  RealVector shifts(jointDimension);
 
   // An iterator on the neighborhood of the current pixel (in joint
   // spatial-range domain)
@@ -385,7 +386,7 @@ void MeanShiftSmoothingImageFilter<TInputImage, TOutputImage, TKernel, TOutputIt
   it.GoToBegin();
   while (!it.IsAtEnd())
     {
-    jointNeighbor = it.Get();
+    const RealType *jointNeighbor = it.GetPixelPointer();
 
     // Compute the squared norm of the difference
     // This is the L2 norm, TODO: replace by the templated norm
@@ -393,7 +394,7 @@ void MeanShiftSmoothingImageFilter<TInputImage, TOutputImage, TKernel, TOutputIt
     for (unsigned int comp = 0; comp < jointDimension; comp++)
       {
       shifts[comp] = jointNeighbor[comp] - jointPixel[comp];
-      double d = shifts[comp]/bandwidth[comp];
+      double d = shifts[comp] / bandwidth[comp];
       norm2 += d*d;
       }
 
@@ -554,7 +555,7 @@ void MeanShiftSmoothingImageFilter<TInputImage, TOutputImage, TKernel, TOutputIt
   typename OutputImageType::PixelType rangePixel(m_NumberOfComponentsPerPixel);
   typename OutputSpatialImageType::PixelType spatialPixel(ImageDimension);
 
-  RealVector jointPixel;
+  RealVector jointPixel(jointDimension);
 
   RealVector bandwidth(jointDimension);
   for (unsigned int comp = 0; comp < ImageDimension; comp++)
@@ -611,8 +612,10 @@ void MeanShiftSmoothingImageFilter<TInputImage, TOutputImage, TKernel, TOutputIt
     bool hasConverged = false;
 
     // get input pixel in the joint spatial-range domain (with components
-    // normalized by bandwith)
-    jointPixel = jointIt.Get(); // Pixel in the joint spatial-range domain
+    // normalized by bandwidth)
+    const RealVector &jointPixelVal = jointIt.Get(); // Pixel in the joint spatial-range domain
+    for (unsigned int comp = 0; comp < jointDimension; comp++)
+      jointPixel[comp] = jointPixelVal[comp];
 
     for (unsigned int comp = ImageDimension; comp < jointDimension; comp++)
       bandwidth[comp] = m_RangeBandwidthRamp*jointPixel[comp]+m_RangeBandwidth;

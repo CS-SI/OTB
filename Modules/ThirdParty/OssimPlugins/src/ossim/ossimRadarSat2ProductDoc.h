@@ -29,7 +29,6 @@ class ossimXmlNode;
 class ossimString;
 
 
-using namespace std;
 
 typedef struct
 {
@@ -47,11 +46,11 @@ typedef struct
    double latitudeScale;
    double longitudeScale;
    double heightScale;
-   vector<double> lineNumeratorCoefficients;
-   vector<double> lineDenominatorCoefficients;
-   vector<double> pixelNumeratorCoefficients;
-   vector<double> pixelDenominatorCoefficients;
-   
+   std::vector<double> lineNumeratorCoefficients;
+   std::vector<double> lineDenominatorCoefficients;
+   std::vector<double> pixelNumeratorCoefficients;
+   std::vector<double> pixelDenominatorCoefficients;
+
 }RPCModel;
 
 namespace ossimplugins
@@ -59,17 +58,17 @@ namespace ossimplugins
 class PlatformPosition;
 class RefPoint;
 class SensorParams;
-   
+
 /** @brief Class to encapsulate parsing RadarSat2 product.xml file. */
 class OSSIM_PLUGINS_DLL ossimRadarSat2ProductDoc
 {
 public:
    /** @brief default constructor */
    ossimRadarSat2ProductDoc();
-      
+
    /** @brief destructor */
    ~ossimRadarSat2ProductDoc();
-      
+
    /**
     * @brief Checks for node /product/sourceAttributes/satellite containing
     * RADARSAT-2.
@@ -77,9 +76,9 @@ public:
     * @return true if present, false if not.
     */
    bool isRadarSat2(const ossimXmlDocument* xdoc) const;
-      
+
    RPCModel getRpcData(const ossimXmlDocument* xdoc) const;
-      
+
    /**
     * @brief Method to initialize PlatformPosition object from
     * RadarSat "product.xml" file.
@@ -89,7 +88,7 @@ public:
     */
    bool initPlatformPosition(const ossimXmlDocument* xdoc,
                              PlatformPosition* pos) const;
-      
+
    /**
     * @brief Method to initialize SensorParams object from
     * RadarSat "product.xml" file.
@@ -99,7 +98,7 @@ public:
     */
    bool initSensorParams(const ossimXmlDocument* xdoc,
                          SensorParams* sp) const;
-      
+
    /**
     * @brief Method to initialize image size from
     * RadarSat "product.xml" file.
@@ -109,7 +108,7 @@ public:
     */
    bool initImageSize(const ossimXmlDocument* xdoc,
                       ossimIpt& imageSize) const;
-      
+
    /**
     * @brief Method to initialize gsd from
     * RadarSat "product.xml" file.
@@ -119,7 +118,11 @@ public:
     */
    bool initGsd(const ossimXmlDocument* xdoc,
                 ossimDpt& gsd) const;
-      
+
+   bool getAcquistionDate(const ossimXmlDocument* xdoc, ossimString& adate);
+
+   bool getProductionDate(const ossimXmlDocument* xdoc, ossimString& pdate);
+
    /**
     * @brief Method to initialize image tie points from
     * RadarSat "product.xml" file.
@@ -132,7 +135,7 @@ public:
                       std::list<ossimDpt>& icp) const;
    bool getSatellite(const ossimXmlDocument* xdoc,
                      ossimString& s) const;
-      
+
    bool getSensor(const ossimXmlDocument* xdoc,
                   ossimString& s) const;
 
@@ -222,7 +225,7 @@ public:
 
    bool getIncidenceAngleFarRange(const ossimXmlDocument* xdoc,
                                   ossimString& s) const;
-   
+
    bool getSatelliteHeight(const ossimXmlDocument* xdoc,
                            ossimString& s) const;
 };
